@@ -18,8 +18,8 @@ Labyrinth 用于将视频画面混淆化，从而规避一些版权限制。
 
 ## 效果
 
-原视频(720P)：https://raw.githubusercontent.com/ERR0RPR0MPT/Labyrinth/main/static/BD720P.mp4
+原视频(720P)：https://raw.githubusercontent.com/ERR0RPR0MPT/Labyrinth/main/static/BD720P2.mp4
 
-加密后的视频：https://raw.githubusercontent.com/ERR0RPR0MPT/Labyrinth/main/static/FROMB720P.mp4
+加密后的视频：https://raw.githubusercontent.com/ERR0RPR0MPT/Labyrinth/main/static/FROMB720P2.mp4
 
-上传哔哩哔哩后下载得到的加密视频进行恢复操作后的原视频：https://raw.githubusercontent.com/ERR0RPR0MPT/Labyrinth/main/static/FROMB720P_output.mp4
+上传哔哩哔哩后下载得到的加密视频进行恢复操作后的原视频：https://raw.githubusercontent.com/ERR0RPR0MPT/Labyrinth/main/static/FROMB720P2_output.mp4
