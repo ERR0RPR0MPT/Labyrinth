@@ -1,6 +1,6 @@
 # Labyrinth
 
-Labyrinth 用于将视频画面混淆化，从而规避一些审查限制。
+Labyrinth 用于将视频画面混淆化，从而规避一些版权限制。
 
 !!EXPERIMENTAL VERSION!!
 
