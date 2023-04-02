@@ -1,39 +1,68 @@
 import os
 import random
 from PIL import Image
-import numpy as np
 import shutil
 import subprocess
 import multiprocessing
 
 
-def laby_to_file(arr, name="laby.npy"):
-    a1 = np.array(arr)
-    np.save(name, a1)
+def laby_to_str(arr):
+    s = ""
+    for i in range(len(arr[0])):
+        s += str(arr[0][i])
+        if i != len(arr[0]) - 1:
+            s += ","
+        else:
+            s += "|"
+    for i in range(len(arr[1])):
+        s += str(arr[1][i])
+        if i != len(arr[1]) - 1:
+            s += ","
+    return s
+
+
+def laby_to_file(s, name="index.laby"):
+    with open(name, "w") as f:
+        f.write(s)
     return True
 
 
-def laby_to_list(name="laby.npy"):
-    arr = np.load(name)
-    arr_list = arr.tolist()
-    return arr_list
+def laby_str_to_list(s):
+    s1 = s.split("|")
+    arr1 = s1[0].split(",")
+    arr2 = s1[1].split(",")
+    arr1 = [int(i) for i in arr1]
+    arr2 = [int(i) for i in arr2]
+    return [arr1, arr2]
+
+
+def laby_file_to_list(name="index.laby"):
+    s = ""
+    with open(name, "r") as f:
+        s = f.read()
+    s1 = s.split("|")
+    arr1 = s1[0].split(",")
+    arr2 = s1[1].split(",")
+    arr1 = [int(i) for i in arr1]
+    arr2 = [int(i) for i in arr2]
+    return [arr1, arr2]
 
 
 def generate_random_laby(width, height, mode="hr"):
-    arr = []
+    arr1 = []
+    arr2 = []
+    for i in range(0, width):
+        arr1.append(i)
     for i in range(0, height):
-        row = []
-        for j in range(0, width):
-            row.append([j, i])
-        if mode == "r" or mode == "vr":  # 随机排列
-            random.shuffle(row)
-        arr.append(row)
+        arr2.append(i)
+    if mode == "r" or mode == "vr":  # 随机排列
+        random.shuffle(arr1)
     if mode == "r" or mode == "hr":  # 随机排行
-        random.shuffle(arr)
-    return arr
+        random.shuffle(arr2)
+    return [arr1, arr2]
 
 
-def generate_random_laby_to_file(name="laby.npy", width="1920", height="1080", mode="hr"):
+def generate_random_laby_to_file(name="index.laby", width="1920", height="1080", mode="hr"):
     try:
         with open(name, "w") as f:
             f.write(decode_list(generate_random_laby(width, height, mode)))
@@ -49,18 +78,13 @@ def generate_random_image(lst=None, origin="origin.png", output="output.png"):
         exit(0)
     original_image = Image.open(origin)
     width, height = original_image.size
-    if len(lst) != height or len(lst[0]) != width:
+    if len(lst[1]) != height or len(lst[0]) != width:
         print(f"[WARN] 不适合的尺寸：{str(len(lst))}x{str(len(lst[0]))} != {str(height)}x{str(width)}")
         exit(0)
     new_image = Image.new('RGB', (width, height))
-    for _height in range(len(lst)):
-        for _width in range(len(lst[_height])):
-            try:
-                pixel = original_image.getpixel((lst[_height][_width][0], lst[_height][_width][1]))
-            except:
-                print(lst[_height][_width][0], lst[_height][_width][1])
-                print(width, height)
-                return None
+    for _width in range(len(lst[0])):
+        for _height in range(len(lst[1])):
+            pixel = original_image.getpixel((lst[0][_width], lst[1][_height]))
             new_image.putpixel((_width, _height), pixel)
     new_image.save(output, **original_image.info)
     return True
@@ -73,47 +97,44 @@ def restore_original_image(lst=None, origin="output.png", restore="restore.png")
         exit(0)
     original_image = Image.open(origin)
     width, height = original_image.size
-    if len(lst) != height or len(lst[0]) != width:
+    if len(lst[1]) != height or len(lst[0]) != width:
         print(f"[WARN] 不适合的尺寸：{str(len(lst))}x{str(len(lst[0]))} != {str(height)}x{str(width)}")
         exit(0)
     new_image = Image.new('RGB', (width, height))
-    for _height in range(len(lst)):
-        for _width in range(len(lst[_height])):
-            try:
-                pixel = original_image.getpixel((_width, _height))
-            except:
-                print(lst[_height][_width][0], lst[_height][_width][1])
-                print(width, height)
-                return None
-            new_image.putpixel((lst[_height][_width][0], lst[_height][_width][1]), pixel)
+    for _width in range(len(lst[0])):
+        for _height in range(len(lst[1])):
+            pixel = original_image.getpixel((_width, _height))
+            new_image.putpixel((lst[0][_width], lst[1][_height]), pixel)
     new_image.save(restore, **original_image.info)
     return True
 
 
-def generate(width=1920, height=1080, mode="hr", name="laby.npy"):
+def generate(width=1920, height=1080, mode="hr", name="index.laby"):
     arr = generate_random_laby(width, height, mode)
-    laby_to_file(arr, name)
-    laby_arr = laby_to_list(name)
+    laby_to_file(laby_to_str(arr), name)
+    laby_arr = laby_file_to_list(name)
     if arr == laby_arr:
         print("Success")
     else:
-        print("出现错误")
+        print("Failed")
     return
 
 
-def encrypt(laby="laby.npy", source="origin.png", output="output.png"):
-    laby_arr = laby_to_list(laby)
+def encrypt(laby="index.laby", source="origin.png", output="output.png"):
+    laby_arr = laby_file_to_list(laby)
     generate_random_image(laby_arr, source, output)
     print("Success")
     exit(0)
 
-def decrypt(laby="laby.npy", source="output.png", output="restore.png"):
-    laby_arr = laby_to_list(laby)
+
+def decrypt(laby="index.laby", source="output.png", output="restore.png"):
+    laby_arr = laby_file_to_list(laby)
     restore_original_image(laby_arr, source, output)
     print("Success")
     exit(0)
 
-def video_encrypt(laby="laby.npy", source="origin.mp4", threads=8, framerate=30):
+
+def video_encrypt(laby="index.laby", source="origin.mp4", threads=8, framerate=30):
     output_dir = ""
     source_dir = ""
     source_name = os.path.basename(source).split(".")[0]
@@ -154,12 +175,15 @@ def video_encrypt(laby="laby.npy", source="origin.mp4", threads=8, framerate=30)
         return False
 
     print("开始加密图片序列")
+
+    laby_arr = laby_file_to_list(laby)
     # 创建线程池
     pool = multiprocessing.Pool(processes=threads)
     # 遍历所有文件夹和文件
-    laby_arr = laby_to_list(laby)
+    i = 0
     for subdir, dirs, files in os.walk(output_dir_source):
         for file in files:
+            i += 1
             source = os.path.join(subdir, file)
             output = os.path.join(output_dir_output, file)
             # 将任务提交到线程池中
@@ -169,7 +193,7 @@ def video_encrypt(laby="laby.npy", source="origin.mp4", threads=8, framerate=30)
     # 等待所有任务完成
     pool.join()
 
-    command = f'ffmpeg -r {framerate} -i "{output_dir_output}/%d.png" -i "{output_dir}/{source_name}_output.mp3" -vcodec libx264 -pix_fmt yuv420p -c:a copy "{output_dir}/{source_name}_output.mp4"'
+    command = f'ffmpeg -r {framerate} -i "{output_dir_output}/%d.png" -i "{output_dir}/{source_name}_output.mp3" -vcodec libx264 -pix_fmt yuv420p -c:a copy "{source_name}_output.mp4"'
     print(f"开始合成视频：{command}")
     try:
         with open(os.devnull, 'w') as devnull:
@@ -183,7 +207,7 @@ def video_encrypt(laby="laby.npy", source="origin.mp4", threads=8, framerate=30)
     exit(0)
 
 
-def video_decrypt(laby="laby.npy", source="output.mp4", threads=8, framerate=30):
+def video_decrypt(laby="index.laby", source="output.mp4", threads=8, framerate=30):
     output_dir = ""
     source_dir = ""
     source_name = os.path.basename(source).split(".")[0]
@@ -228,8 +252,10 @@ def video_decrypt(laby="laby.npy", source="output.mp4", threads=8, framerate=30)
     pool = multiprocessing.Pool(processes=threads)
     # 遍历所有文件夹和文件
     laby_arr = laby_to_list(laby)
+    i = 0
     for subdir, dirs, files in os.walk(output_dir_restore):
         for file in files:
+            i += 1
             source = os.path.join(subdir, file)
             output = os.path.join(output_dir_output, file)
             # 将任务提交到线程池中
@@ -239,7 +265,7 @@ def video_decrypt(laby="laby.npy", source="output.mp4", threads=8, framerate=30)
     # 等待所有任务完成
     pool.join()
 
-    command = f'ffmpeg -r {framerate} -i "{output_dir_output}/%d.png" -i "{output_dir}/{source_name}_output.mp3" -vcodec libx264 -pix_fmt yuv420p -c:a copy "{output_dir}/{source_name}_output.mp4"'
+    command = f'ffmpeg -r {framerate} -i "{output_dir_output}/%d.png" -i "{output_dir}/{source_name}_output.mp3" -vcodec libx264 -pix_fmt yuv420p -c:a copy "{source_name}_output.mp4"'
     print(f"开始合成视频：{command}")
     try:
         with open(os.devnull, 'w') as devnull:
@@ -254,22 +280,18 @@ def video_decrypt(laby="laby.npy", source="output.mp4", threads=8, framerate=30)
 
 
 if __name__ == "__main__":
-    # generate(640, 360, "r", "labyrinth_r_360P.npy")
-    # generate(854, 480, "r", "labyrinth_r_480P.npy")
-    # generate(1280, 720, "r", "labyrinth_r_720P.npy")
-    # generate(1920, 1080, "r", "labyrinth_r_1080P.npy")
-    # generate(3840, 2160, "r", "labyrinth_r_4K.npy")
-    # generate(1920, 1080, "hr", "labyrinth_hr_1080P.npy")
-    # generate(640, 360, "hr", "labyrinth_hr_360P.npy")
-    # generate(854, 480, "hr", "labyrinth_hr_480P.npy")
-    # generate(1280, 720, "hr", "labyrinth_hr_720P.npy")
-    # generate(1920, 1080, "hr", "labyrinth_hr_1080P.npy")
-    # generate(3840, 2160, "hr", "labyrinth_hr_4K.npy")
-    # encrypt("labyrinth_hr_1080P.npy", "d.png", "outpute.png")
-    # decrypt("labyrinth_hr_1080P.npy", "outputd.png", "restore.png")
-    # generate(852, 480, "hr", "labyrinth_hr_480P.npy")
-    # video_encrypt("labyrinth_r_1080P.npy", "坏苹果.mp4", threads=12, framerate=60)
-    # video_decrypt("labyrinth_r_1080P.npy", "坏苹果_output.mp4", threads=12, framerate=60)
-    video_encrypt("labyrinth_hr_720P.npy", "坏苹果.mp4", threads=12, framerate=30)
-    video_decrypt("labyrinth_hr_720P.npy", "坏苹果_output.mp4", threads=12, framerate=30)
-    # video_encrypt("labyrinth_r_4K.npy", "BD4K.mp4", threads=3, framerate=60)
+    # generate(640, 360, "hr", "./laby/labyrinth_hr_360P.laby")
+    # generate(854, 480, "hr", "./laby/labyrinth_hr_480P.laby")
+    # generate(1280, 720, "hr", "./laby/labyrinth_hr_720P.laby")
+    # generate(1920, 1080, "hr", "./laby/labyrinth_hr_1080P.laby")
+    # generate(3840, 2160, "vr", "./laby/labyrinth_hr_4K.laby")
+    # generate(640, 360, "vr", "./laby/labyrinth_vr_360P.laby")
+    # generate(854, 480, "vr", "./laby/labyrinth_vr_480P.laby")
+    # generate(1280, 720, "vr", "./laby/labyrinth_vr_720P.laby")
+    # generate(1920, 1080, "vr", "./laby/labyrinth_vr_1080P.laby")
+    # generate(3840, 2160, "vr", "./laby/labyrinth_vr_4K.laby")
+    # encrypt("./laby/labyrinth_hr_1080P.laby", "target.png", "target_output.png")
+    # decrypt("./laby/labyrinth_hr_1080P.laby", "target_output.png", "target_restore.png")
+    video_encrypt("./laby/labyrinth_hr_720P.laby", "BD720P.mp4", threads=6, framerate=30)
+    video_decrypt("./laby/labyrinth_hr_720P.laby", "BD720P_output.mp4", threads=6, framerate=30)
+
