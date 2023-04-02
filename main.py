@@ -251,7 +251,7 @@ def video_decrypt(laby="index.laby", source="output.mp4", threads=8, framerate=3
     # 创建线程池
     pool = multiprocessing.Pool(processes=threads)
     # 遍历所有文件夹和文件
-    laby_arr = laby_to_list(laby)
+    laby_arr = laby_file_to_list(laby)
     i = 0
     for subdir, dirs, files in os.walk(output_dir_restore):
         for file in files:
@@ -292,6 +292,5 @@ if __name__ == "__main__":
     # generate(3840, 2160, "vr", "./laby/labyrinth_vr_4K.laby")
     # encrypt("./laby/labyrinth_hr_1080P.laby", "target.png", "target_output.png")
     # decrypt("./laby/labyrinth_hr_1080P.laby", "target_output.png", "target_restore.png")
-    video_encrypt("./laby/labyrinth_hr_720P.laby", "BD720P.mp4", threads=6, framerate=30)
-    video_decrypt("./laby/labyrinth_hr_720P.laby", "BD720P_output.mp4", threads=6, framerate=30)
-
+    video_encrypt("./laby/labyrinth_hr_1080P.laby", "BD1080P.mp4", threads=3, framerate=60)
+    video_decrypt("./laby/labyrinth_hr_1080P.laby", "BD1080P_output.mp4", threads=3, framerate=60)
