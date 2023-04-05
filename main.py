@@ -3,6 +3,8 @@ import random
 from PIL import Image
 import shutil
 import subprocess
+import time
+import numpy as np
 import multiprocessing
 
 
@@ -73,6 +75,7 @@ def generate_random_laby_to_file(name="index.laby", width="1920", height="1080",
 
 def generate_random_image(lst=None, origin="origin.png", output="output.png"):
     print(f"开始加密：{output}")
+    start_time = time.time()
     if lst is None:
         print("[WARN] 无对应的列表文件")
         exit(0)
@@ -81,12 +84,13 @@ def generate_random_image(lst=None, origin="origin.png", output="output.png"):
     if len(lst[1]) != height or len(lst[0]) != width:
         print(f"[WARN] 不适合的尺寸：{str(len(lst))}x{str(len(lst[0]))} != {str(height)}x{str(width)}")
         exit(0)
-    new_image = Image.new('RGB', (width, height))
-    for _width in range(len(lst[0])):
-        for _height in range(len(lst[1])):
-            pixel = original_image.getpixel((lst[0][_width], lst[1][_height]))
-            new_image.putpixel((_width, _height), pixel)
+    original_array = np.array(original_image)
+    new_array = np.zeros(original_array.shape, dtype=np.uint8)
+    new_array[lst[1], lst[0]] = original_array.transpose(1, 0, 2)  # 使用转置操作来调整维度
+    new_image = Image.fromarray(new_array)
     new_image.save(output, **original_image.info)
+    end_time = time.time()
+    print(f"生成图片花费的时间为：{end_time - start_time:.3f}秒")
     return True
 
 
@@ -294,3 +298,5 @@ if __name__ == "__main__":
     # decrypt("./laby/labyrinth_hr_1080P.laby", "target_output.png", "target_restore.png")
     video_encrypt("./laby/labyrinth_hr_1080P.laby", "BD1080P.mp4", threads=3, framerate=60)
     video_decrypt("./laby/labyrinth_hr_1080P.laby", "BD1080P_output.mp4", threads=3, framerate=60)
+    encrypt("./laby/labyrinth_hr_1080P.laby", "target.png", "target_output.png")
+    decrypt("./laby/labyrinth_hr_1080P.laby", "target_output.png", "target_restore.png")
